@@ -1,0 +1,2 @@
+# No external packages needed: the app uses only the Python standard library.
+# Tkinter ships with Python (on Linux: sudo apt install python3-tk).

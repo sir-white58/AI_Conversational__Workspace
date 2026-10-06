@@ -31,6 +31,7 @@ class MainWindow(tk.Tk):
         self.pending = None               # conversation waiting for an AI reply
         self.expanded = set()             # workspaces open in the sidebar
         self.replies = queue.Queue()      # the AI thread puts results here
+        self.provider = "auto"            # which AI to use: auto / gemini / groq
 
         self._load_data()
         self.build()
@@ -223,7 +224,8 @@ class MainWindow(tk.Tk):
             self.chat.toast("Still waiting for the last reply…")
             return False
         placeholder = not self.ai_service.api_key or self.ai_service.api_key.startswith("paste_your")
-        if placeholder and not self._ask_for_key():
+        needs_key = placeholder and self.provider != "groq" and not self.ai_service.groq_key
+        if needs_key and not self._ask_for_key():
             return False
         if self.conv is None:
             self.conv = self._new_conv(self.ws)
@@ -242,13 +244,14 @@ class MainWindow(tk.Tk):
         self.pending = conv
         self.chat.set_busy(True)
         threading.Thread(target=self._ask_ai, daemon=True,
-                         args=(self.ws.get_instruction(), history, text, conv)).start()
+                         args=(self.ws.get_instruction(), history, text, conv, self.provider)).start()
         return True
 
-    def _ask_ai(self, instruction, history, text, conv):
+    def _ask_ai(self, instruction, history, text, conv, provider):
         """Runs in a background thread so the window never freezes."""
         try:
-            self.replies.put(("ok", self.ai_service.get_reply(instruction, history, text), text, conv))
+            reply = self.ai_service.get_reply(instruction, history, text, provider=provider)
+            self.replies.put(("ok", reply, text, conv))
         except AIServiceError as error:
             self.replies.put(("error", str(error), text, conv))
         except Exception as error:                 # anything unexpected
@@ -268,6 +271,7 @@ class MainWindow(tk.Tk):
         if status == "ok":
             message = conv.add_message(AI, payload)
             self._save()                           # saved after every exchange
+            self.chat.set_status(f"Answered by {self.ai_service.last_provider}")
             if conv is self.conv:
                 self.chat.add_bubble(message, animate=True)
         else:

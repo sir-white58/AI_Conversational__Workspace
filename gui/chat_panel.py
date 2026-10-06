@@ -4,6 +4,9 @@ import tkinter as tk
 from gui.theme import T, font, FlatButton, ScrollFrame, style
 from models.message import USER
 
+PROVIDERS = ["auto", "gemini", "groq"]
+HINT = "Enter to send  ·  Shift+Enter for a new line"
+
 def clean_md(s):
     """Light markdown clean-up (labels can't show bold or bullets natively)."""
     s = re.sub(r"\*\*(.+?)\*\*", r"\1", s)
@@ -20,6 +23,8 @@ class ChatPanel(tk.Frame):
         self.title = tk.Label(head, font=font(15, "bold"), bg=c["bg"], fg=c["text"]); self.title.pack(side="left")
         self.chip = tk.Label(head, font=font(9, "bold"), padx=10, pady=3, bg=c["card"], fg=c["accent"]); self.chip.pack(side="left", padx=12)
         FlatButton(head, "⇩ Export", lambda: app.export_conversation()).pack(side="right")
+        self.prov_btn = FlatButton(head, f"⚙ {app.provider.capitalize()}", self._cycle_provider)
+        self.prov_btn.pack(side="right", padx=6)
         tk.Frame(self, bg=c["border"], height=1).pack(fill="x")
         self.scroll = ScrollFrame(self, c["bg"]); self.scroll.pack(fill="both", expand=True)
         self.scroll.canvas.bind("<Configure>", self._resize, add="+")
@@ -31,7 +36,19 @@ class ChatPanel(tk.Frame):
         self.input.pack(side="left", fill="x", expand=True)
         self.send_btn = FlatButton(card, "Send  ➤", self.submit, kind="primary"); self.send_btn.pack(side="right", padx=8, pady=8)
         self.input.bind("<Return>", self._enter); self.input.bind("<KeyRelease>", self._grow)
-        tk.Label(box, text="Enter to send  ·  Shift+Enter for a new line", font=font(8), bg=c["bg"], fg=c["muted"]).pack(anchor="w", pady=(4, 0))
+        self.hint = tk.Label(box, text=HINT, font=font(8), bg=c["bg"], fg=c["muted"])
+        self.hint.pack(anchor="w", pady=(4, 0))
+
+    # ---- AI provider choice
+    def _cycle_provider(self):
+        """Click to switch: Auto -> Gemini -> Groq -> Auto."""
+        i = PROVIDERS.index(self.app.provider)
+        self.app.provider = PROVIDERS[(i + 1) % len(PROVIDERS)]
+        self.prov_btn.config(text=f"⚙ {self.app.provider.capitalize()}")
+
+    def set_status(self, text):
+        """Small text under the message box (e.g. who answered)."""
+        self.hint.config(text=text or HINT)
 
     # ---- input box
     def _enter(self, e):

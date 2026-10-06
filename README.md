@@ -32,8 +32,8 @@ conversations organised in named workspaces. Group 24, Python Advanced, Cohort 3
 | Member | Branch | Responsible for |
 |---|---|---|
 | Leader (Olugboye Isaac) | `leader` | `models/`, `main.py`, `gui/main_window.py`, README, merging |
-| Member 2 | `data-manager` | `data/data_manager.py`, export, tests for file handling |
-| Member 3 | `ai-service` | `api/ai_service.py`, modes, error handling, tests for API code |
-| Member 4 | `gui-panels` | `gui/sidebar.py`, `gui/chat_panel.py`, `gui/dialogs.py` |
-
+| Olajide Ajao | `data-manager` | `data/data_manager.py`, export, tests for file handling |
+| Muhammad Umar | `ai-service` | `api/ai_service.py`, modes, error handling, tests for API code |
+| Reuben Salama | `gui-theme` |
+| Chinmdindu Igwe | `tests` |
 See `GIT_WORKFLOW.md` for how we use Git.
